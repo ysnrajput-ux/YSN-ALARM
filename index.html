@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>YSN SMART ALARM</title>
+<title>YSN SMART ALARM • Ultimate Edition</title>
 <meta name="theme-color" content="#00ffe1">
 <style>
 :root{
@@ -152,11 +152,24 @@ body:before{content:'';position:fixed;inset:-30%;background:radial-gradient(circ
 <input class='input' type='time' id='alarmTime'>
 <input class='input' id='alarmLabel' placeholder='Alarm Label'>
 <select class='input' id='alarmRepeat'>
-<option>Everyday</option>
-<option>Weekdays</option>
-<option>Weekends</option>
+<option>Daily</option>
+<option>Monday-Friday</option>
+<option>Weekend</option>
 <option>One Time</option>
+<option>Custom</option>
 </select>
+<div class='card glass' style='padding:16px;margin-top:12px'>
+<div style='margin-bottom:10px;font-weight:800'>Custom Days</div>
+<div class='row' style='flex-wrap:wrap'>
+<label class='tag'><input type='checkbox' value='Mon' class='day'> Mon</label>
+<label class='tag'><input type='checkbox' value='Tue' class='day'> Tue</label>
+<label class='tag'><input type='checkbox' value='Wed' class='day'> Wed</label>
+<label class='tag'><input type='checkbox' value='Thu' class='day'> Thu</label>
+<label class='tag'><input type='checkbox' value='Fri' class='day'> Fri</label>
+<label class='tag'><input type='checkbox' value='Sat' class='day'> Sat</label>
+<label class='tag'><input type='checkbox' value='Sun' class='day'> Sun</label>
+</div>
+</div>
 <select class='input' id='alarmSound'>
 <option>Classic Alarm</option>
 <option>Rain Sleep</option>
@@ -228,9 +241,15 @@ function closeSheet(){alarmSheet.classList.remove('open')}
 function openSounds(){soundSheet.classList.add('open');menu.classList.remove('open')}
 function closeSounds(){soundSheet.classList.remove('open')}
 function toggleMenu(){menu.classList.toggle('open')}
+let editingIndex=null;
 function saveAlarm(){
-let obj={time:alarmTime.value,label:alarmLabel.value||'Smart Alarm',repeat:alarmRepeat.value,sound:alarmSound.value,mission:alarmMission.value,active:true};
-alarms.unshift(obj);localStorage.setItem('alarms',JSON.stringify(alarms));renderAlarms();closeSheet();navigator.vibrate?.(80)
+let custom=[...document.querySelectorAll('.day:checked')].map(x=>x.value).join(', ');
+let obj={time:alarmTime.value,label:alarmLabel.value||'Smart Alarm',repeat:alarmRepeat.value,customDays:custom,sound:alarmSound.value,mission:alarmMission.value,active:true,created:Date.now()};
+if(editingIndex!==null){alarms[editingIndex]=obj;editingIndex=null}else{alarms.unshift(obj)}
+localStorage.setItem('alarms',JSON.stringify(alarms));
+renderAlarms();
+closeSheet();
+navigator.vibrate?.(80)
 }
 function renderAlarms(){
 alarmList.innerHTML='';
@@ -240,12 +259,14 @@ alarmList.innerHTML+=`<div class='alarmcard glass'>
 <div class='alarmtime'>${a.time}</div>
 <div class='alarmlabel'>${a.label}</div>
 <div class='alarmmeta'>
+<div class='tag'>${a.customDays||a.repeat}</div>
 <div class='tag'>${a.repeat}</div>
 <div class='tag'>${a.sound}</div>
 <div class='tag'>Snooze 5m</div>
 </div>
 <div class='row' style='margin-top:14px'>
 <button class='smallbtn' onclick='previewSound()'>▶ Preview</button>
+<button class='smallbtn' onclick='editAlarm(${i})'>✏ Edit</button>
 <button class='smallbtn' onclick='deleteAlarm(${i})'>🗑 Delete</button>
 </div>
 </div>
@@ -255,7 +276,24 @@ alarmList.innerHTML+=`<div class='alarmcard glass'>
 }
 renderAlarms();
 function toggleAlarm(i,el){alarms[i].active=!alarms[i].active;el.classList.toggle('active');localStorage.setItem('alarms',JSON.stringify(alarms))}
-function deleteAlarm(i){alarms.splice(i,1);localStorage.setItem('alarms',JSON.stringify(alarms));renderAlarms()}
+function deleteAlarm(i){
+if(confirm('Delete this alarm?')){
+alarms.splice(i,1);
+localStorage.setItem('alarms',JSON.stringify(alarms));
+renderAlarms();
+}
+}
+function editAlarm(i){
+let a=alarms[i];
+editingIndex=i;
+alarmTime.value=a.time;
+alarmLabel.value=a.label;
+alarmRepeat.value=a.repeat;
+alarmSound.value=a.sound;
+alarmMission.value=a.mission;
+document.querySelectorAll('.day').forEach(d=>d.checked=(a.customDays||'').includes(d.value));
+openCreateAlarm();
+}
 function previewSound(){
 let c=new(window.AudioContext||window.webkitAudioContext)();
 let o=c.createOscillator();let g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=600;g.gain.value=.1;o.start();o.stop(c.currentTime+1)
@@ -291,7 +329,18 @@ function voiceCommand(){
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return alert('Voice not supported');
 let r=new SR();r.start();r.onresult=e=>{let t=e.results[0][0].transcript.toLowerCase();if(t.includes('alarm')){speechSynthesis.speak(new SpeechSynthesisUtterance('Voice command received'));openCreateAlarm()}}
 }
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+window.addEventListener('beforeinstallprompt',e=>{
+e.preventDefault();
+deferredPrompt=e;
+setTimeout(()=>{
+let banner=document.createElement('div');
+banner.className='glass';
+banner.style='position:fixed;left:14px;right:14px;top:90px;padding:18px;border-radius:24px;z-index:20;display:flex;justify-content:space-between;align-items:center';
+banner.innerHTML='<div><b>Install YSN SMART ALARM</b><div style="opacity:.7;font-size:.9rem">Get full-screen premium app experience</div></div><button id="installNow" class="smallbtn">Install</button>';
+document.body.appendChild(banner);
+document.getElementById('installNow').onclick=async()=>{deferredPrompt.prompt();banner.remove()};
+},1500)
+});
 installBtn.onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt()}}
 if('serviceWorker' in navigator){
 let sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{});`;
