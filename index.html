@@ -195,6 +195,10 @@ body:before{content:'';position:fixed;inset:-30%;background:radial-gradient(circ
 </div>
 <div class='menu glass' id='menu'>
 <button onclick='openSounds()'>🎵 Alarm Sounds</button>
+<button onclick='applyTheme("amoled")'>🌑 AMOLED</button>
+<button onclick='applyTheme("light")'>☀ Light</button>
+<button onclick='applyTheme("neon")'>🟢 Neon</button>
+<button onclick='applyTheme("gold")'>👑 Royal Gold</button>
 <button>🎨 Themes</button>
 <button onclick='voiceCommand()'>🎙 Voice Settings</button>
 <button>😴 Sleep Mode</button>
@@ -311,7 +315,10 @@ function openCreateAlarm(){alarmSheet.classList.add('open')}
 function closeSheet(){alarmSheet.classList.remove('open')}
 function openSounds(){soundSheet.classList.add('open');menu.classList.remove('open')}
 function closeSounds(){soundSheet.classList.remove('open')}
-function toggleMenu(){menu.classList.toggle('open')}
+function toggleMenu(){
+menu.classList.toggle('open');
+menu.animate([{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'translateY(0)'}],{duration:250,fill:'forwards'});
+}
 let editingIndex=null;
 function saveAlarm(){
 let custom=[...document.querySelectorAll('.day:checked')].map(x=>x.value).join(', ');
@@ -336,7 +343,7 @@ alarmList.innerHTML+=`<div class='alarmcard glass'>
 <div class='tag'>Snooze 5m</div>
 </div>
 <div class='row' style='margin-top:14px'>
-<button class='smallbtn' onclick='previewSound()'>▶ Preview</button>
+<button class='smallbtn' onclick='previewSound(sounds.find(x=>x.name===\''+a.sound+'\')?.freq||520,a.sound)'>▶ Preview</b
 <button class='smallbtn' onclick='editAlarm(${i})'>✏ Edit</button>
 <button class='smallbtn' onclick='deleteAlarm(${i})'>🗑 Delete</button>
 </div>
@@ -377,21 +384,44 @@ renderSounds(document.querySelector('.search')?.value||'');
 activeCtx=new(window.AudioContext||window.webkitAudioContext)();
 activeOsc=activeCtx.createOscillator();
 activeGain=activeCtx.createGain();
-let lfo=activeCtx.createOscillator();
-let lfoGain=activeCtx.createGain();
-lfo.frequency.value=4;
-lfoGain.gain.value=20;
-lfo.connect(lfoGain);
-lfoGain.connect(activeOsc.frequency);
-activeOsc.type='sine';
-activeOsc.frequency.value=freq;
-activeOsc.connect(activeGain);
+const filter=activeCtx.createBiquadFilter();
+filter.type='lowpass';
+filter.frequency.value=freq*2;
+activeOsc.connect(filter);
+filter.connect(activeGain);
 activeGain.connect(activeCtx.destination);
+let types=['sine','triangle','square','sawtooth'];
+let hash=[...name].reduce((a,c)=>a+c.charCodeAt(0),0);
+activeOsc.type=types[hash%types.length];
+activeOsc.frequency.setValueAtTime(freq,activeCtx.currentTime);
+activeOsc.frequency.exponentialRampToValueAtTime(freq+(hash%200),activeCtx.currentTime+1.2);
 activeGain.gain.setValueAtTime(.001,activeCtx.currentTime);
-activeGain.gain.exponentialRampToValueAtTime(muted?0:volumeLevel,activeCtx.currentTime+0.4);
+activeGain.gain.exponentialRampToValueAtTime(muted?0:volumeLevel,activeCtx.currentTime+.3);
+activeGain.gain.exponentialRampToValueAtTime((muted?0:volumeLevel)/2,activeCtx.currentTime+2);
+const tremolo=activeCtx.createOscillator();
+const tremGain=activeCtx.createGain();
+tremolo.frequency.value=(hash%7)+2;
+tremGain.gain.value=15;
+tremolo.connect(tremGain);
+tremGain.connect(activeOsc.frequency);
+tremolo.start();
 activeOsc.start();
-lfo.start();
-setTimeout(()=>{if(activeGain){activeGain.gain.exponentialRampToValueAtTime(.0001,activeCtx.currentTime+.8)}},2500);
+if(name.includes('Rain')||name.includes('Ocean')||name.includes('Forest')){
+const buffer=activeCtx.createBuffer(1,activeCtx.sampleRate*2,activeCtx.sampleRate);
+const data=buffer.getChannelData(0);
+for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*0.15;
+const noise=activeCtx.createBufferSource();
+noise.buffer=buffer;
+noise.loop=true;
+const noiseFilter=activeCtx.createBiquadFilter();
+noiseFilter.type='lowpass';noiseFilter.frequency.value=800;
+noise.connect(noiseFilter);noiseFilter.connect(activeGain);noise.start();
+setTimeout(()=>noise.stop(),3000)
+}
+if(name.includes('Emergency')||name.includes('Military')||name.includes('Ultra')){
+let siren=setInterval(()=>{if(activeOsc)activeOsc.frequency.value=activeOsc.frequency.value>700?350:950},300);
+setTimeout(()=>clearInterval(siren),3000)
+}
 setTimeout(()=>{stopPreview()},3200)
 }
 function setVolume(v){volumeLevel=v;if(activeGain)activeGain.gain.value=muted?0:v}
@@ -424,9 +454,16 @@ function stopTimer(){clearInterval(int);timer=1500;timerText.innerText='25:00'}
 let swInt,swSec=0;
 function startSW(){clearInterval(swInt);swInt=setInterval(()=>{swSec++;let m=Math.floor(swSec/60).toString().padStart(2,'0');let s=(swSec%60).toString().padStart(2,'0');sw.innerText=`${m}:${s}`},1000)}
 function stopSW(){clearInterval(swInt);swSec=0;sw.innerText='00:00'}
-function toggleTheme(){
-let dark=document.body.dataset.mode!=='light';
-if(dark){document.body.style.background='#f4f4f4';document.documentElement.style.setProperty('--text','#111');document.documentElement.style.setProperty('--card','rgba(255,255,255,.6)');document.body.dataset.mode='light'}
+function applyTheme(t){
+const r=document.documentElement;
+if(t==='light'){r.style.setProperty('--bg','#f4f4f4');r.style.setProperty('--text','#111');r.style.setProperty('--card','rgba(255,255,255,.65)');r.style.setProperty('--accent','#2563eb');r.style.setProperty('--accent2','#7c3aed');document.body.style.background='#f4f4f4'}
+if(t==='amoled'){r.style.setProperty('--bg','#000');r.style.setProperty('--text','#fff');r.style.setProperty('--card','rgba(255,255,255,.06)');r.style.setProperty('--accent','#00ffe1');r.style.setProperty('--accent2','#0ea5e9');document.body.style.background='#000'}
+if(t==='neon'){r.style.setProperty('--bg','#06111f');r.style.setProperty('--text','#fff');r.style.setProperty('--card','rgba(0,255,225,.08)');r.style.setProperty('--accent','#39ff14');r.style.setProperty('--accent2','#00e5ff');document.body.style.background='#06111f'}
+if(t==='gold'){r.style.setProperty('--bg','#1a1204');r.style.setProperty('--text','#fff5d6');r.style.setProperty('--card','rgba(255,215,0,.08)');r.style.setProperty('--accent','#ffd700');r.style.setProperty('--accent2','#ffb300');document.body.style.background='#1a1204'}
+localStorage.setItem('themeMode',t)
+}
+function toggleTheme(){let modes=['amoled','light','neon','gold'];let current=localStorage.getItem('themeMode')||'amoled';let next=modes[(modes.indexOf(current)+1)%modes.length];applyTheme(next)}
+applyTheme(localStorage.getItem('themeMode')||'amoled');
 else{document.body.style.background='#050816';document.documentElement.style.setProperty('--text','#fff');document.documentElement.style.setProperty('--card','rgba(255,255,255,.08)');document.body.dataset.mode='dark'}
 }
 function voiceCommand(){
@@ -445,7 +482,14 @@ document.body.appendChild(banner);
 document.getElementById('installNow').onclick=async()=>{deferredPrompt.prompt();banner.remove()};
 },1500)
 });
-installBtn.onclick=async()=>{if(deferredPrompt){deferredPrompt.prompt()}}
+installBtn.onclick=async()=>{
+if(deferredPrompt){
+await deferredPrompt.prompt();
+}
+else{
+alert('Use browser menu → Add to Home Screen');
+}
+}
 if('serviceWorker' in navigator){
 let sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{});`;
 navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'})));
