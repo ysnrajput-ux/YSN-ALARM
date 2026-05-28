@@ -3,499 +3,143 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>YSN SMART ALARM • Ultimate Edition</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>YSN SMART ALARM</title>
 <meta name="theme-color" content="#00ffe1">
+<link rel="manifest" id="manifestPlaceholder">
 <style>
-:root{
---bg:#060816;
---card:rgba(255,255,255,.08);
---text:#fff;
---accent:#00ffe1;
---accent2:#7c4dff;
---danger:#ff3d71;
---radius:28px;
---shadow:0 10px 40px rgba(0,0,0,.4);
-}
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;-webkit-tap-highlight-color:transparent}
-body{background:#050816;color:var(--text);overflow:hidden;height:100vh}
-body:before{content:'';position:fixed;inset:-30%;background:radial-gradient(circle at top left,var(--accent2),transparent 30%),radial-gradient(circle at bottom right,var(--accent),transparent 30%);filter:blur(80px);opacity:.35;animation:bg 12s linear infinite alternate}
-@keyframes bg{to{transform:rotate(20deg) scale(1.1)}}
-.glass{background:var(--card);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
-.app{height:100vh;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.topbar{padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:5}
-.bigtime{font-size:2.8rem;font-weight:900;line-height:1}
-.topactions{display:flex;gap:10px}
-.iconbtn{width:54px;height:54px;border-radius:18px;border:none;color:#fff;font-size:1.2rem}
-.pages{flex:1;overflow:hidden;position:relative}
-.page{position:absolute;inset:0;padding:16px;padding-bottom:110px;overflow:auto;display:none;animation:fade .3s}
-.page.active{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.card{padding:18px;border-radius:var(--radius);margin-bottom:18px}
-.hero{padding:28px;border-radius:36px;position:relative;overflow:hidden}
-.hero h1{font-size:4rem}
-.hero p{opacity:.75;margin-top:8px}
-.sectiontitle{font-size:1.2rem;font-weight:800;margin:18px 0 12px}
-.alarmcard{padding:22px;border-radius:34px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
-.alarmtime{font-size:3rem;font-weight:900}
-.alarmlabel{font-size:1rem;opacity:.75;margin-top:6px}
-.alarmmeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.tag{padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.8rem}
-.bigbtn{width:100%;padding:20px;border:none;border-radius:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));font-size:1.1rem;font-weight:900;color:#000;margin-top:12px}
-.toggle{width:68px;height:38px;border-radius:999px;background:#222;position:relative}
-.toggle:before{content:'';position:absolute;width:30px;height:30px;border-radius:50%;background:#fff;top:4px;left:4px;transition:.3s}
-.toggle.active{background:linear-gradient(135deg,var(--accent),var(--accent2))}
-.toggle.active:before{left:34px}
-.smallbtn{padding:14px 18px;border:none;border-radius:18px;background:rgba(255,255,255,.08);color:#fff;font-size:1rem}
-.row{display:flex;gap:12px;align-items:center}
-.input,select{width:100%;padding:20px;border:none;border-radius:24px;background:rgba(255,255,255,.07);color:#fff;font-size:1rem;margin-top:12px}
-.bottomnav{position:fixed;bottom:12px;left:12px;right:12px;height:82px;border-radius:30px;display:flex;justify-content:space-around;align-items:center;z-index:6}
-.navbtn{border:none;background:none;color:#fff;font-size:.75rem;display:flex;flex-direction:column;align-items:center;gap:6px;opacity:.5}
-.navbtn.active{opacity:1;color:var(--accent)}
-.fab{position:fixed;right:20px;bottom:104px;width:78px;height:78px;border-radius:50%;display:grid;place-items:center;font-size:2.4rem;color:#000;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 40px rgba(0,255,225,.45);z-index:7}
-.sheet{position:fixed;left:0;right:0;bottom:-100%;height:88vh;border-radius:38px 38px 0 0;padding:20px;transition:.45s;z-index:10;overflow:auto}
-.sheet.open{bottom:0}
-.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.soundgrid{display:grid;gap:16px}
-.soundcard{padding:22px;border-radius:28px;display:flex;justify-content:space-between;align-items:center}
-.soundtitle{font-size:1.2rem;font-weight:800}
-.search{padding:18px;border-radius:24px;border:none;background:rgba(255,255,255,.07);color:#fff;width:100%;font-size:1rem;margin-bottom:18px}
-.menu{position:fixed;top:84px;right:14px;width:260px;padding:18px;border-radius:30px;z-index:12;display:none}
-.menu.open{display:block}
-.menu button{width:100%;padding:18px;border:none;border-radius:18px;background:rgba(255,255,255,.06);color:#fff;margin-bottom:10px;text-align:left;font-size:1rem}
-.timercircle{width:220px;height:220px;border-radius:50%;border:10px solid rgba(255,255,255,.08);display:grid;place-items:center;font-size:2.5rem;font-weight:900;margin:30px auto;box-shadow:0 0 40px rgba(0,255,225,.2) inset}
-.listitem{padding:20px;border-radius:24px;margin-bottom:14px}
-.floatclock{position:fixed;top:90px;left:14px;padding:12px 18px;border-radius:18px;font-weight:900;z-index:5}
-.fullalarm{position:fixed;inset:0;background:#000;display:none;justify-content:center;align-items:center;flex-direction:column;z-index:30;padding:24px;text-align:center}
-.ring{width:250px;height:250px;border-radius:50%;border:10px solid var(--accent);animation:ring 1s infinite}
-@keyframes ring{50%{transform:scale(1.05);box-shadow:0 0 70px var(--accent)}}
-.missionbox{padding:24px;border-radius:30px;width:100%;max-width:380px;margin-top:20px}
-.eq{display:flex;gap:8px;align-items:center}
-.eqbar{width:4px;height:30px;background:var(--accent);border-radius:10px;animation:eq .7s infinite alternate}
-.eqbar:nth-child(2){animation-delay:.2s}.eqbar:nth-child(3){animation-delay:.4s}.eqbar:nth-child(4){animation-delay:.6s}
-@keyframes eq{from{height:14px}to{height:38px}}
-::-webkit-scrollbar{display:none}
+:root{--bg:#050816;--card:rgba(255,255,255,.08);--text:#fff;--accent:#00ffe1;--accent2:#7c4dff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:Inter,system-ui;background:radial-gradient(circle at top,#122,#050816 70%);color:var(--text);overflow:hidden}
+.app{height:100vh;display:flex;flex-direction:column}
+.topbar,.bottomnav{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,.25);backdrop-filter:blur(20px);z-index:5}
+.topbar button,.fab,.smallbtn,.navbtn,.menu button{border:none;border-radius:18px;background:var(--card);color:#fff;padding:12px 14px;font-size:15px}
+.main{flex:1;overflow:auto;padding:16px 16px 100px}
+.screen{display:none;animation:fade .25s}.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(18px);padding:18px;border-radius:28px;margin-bottom:16px;box-shadow:0 0 30px rgba(0,255,225,.08)}
+.clock{font-size:4rem;font-weight:900;text-align:center;margin:10px 0;background:linear-gradient(90deg,var(--accent),#fff);-webkit-background-clip:text;color:transparent}
+.alarmcard{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.bigtime{font-size:2.4rem;font-weight:800}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.input,select,textarea{width:100%;padding:16px;border:none;border-radius:18px;background:rgba(255,255,255,.08);color:#fff;margin:8px 0}
+.fab{position:fixed;right:20px;bottom:90px;width:70px;height:70px;border-radius:50%;font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:900}
+.bottomnav{position:fixed;bottom:0;width:100%;left:0}
+.navbtn{flex:1;background:none}
+.sheet,.menu{position:fixed;left:0;right:0;background:#0a1024;z-index:10;transition:.3s}
+.sheet{bottom:-100%;border-radius:28px 28px 0 0;padding:20px;max-height:90vh;overflow:auto}.sheet.open{bottom:0}
+.menu{top:-100%;padding:20px;border-radius:0 0 28px 28px}.menu.open{top:0}
+.soundcard{padding:16px;border-radius:24px;background:rgba(255,255,255,.05);margin-bottom:12px}
+.eq{display:flex;gap:4px;height:18px;align-items:end}.eq span{width:4px;background:var(--accent);border-radius:9px;animation:eq 1s infinite alternate}.eq span:nth-child(2){animation-delay:.2s}.eq span:nth-child(3){animation-delay:.4s}.eq span:nth-child(4){animation-delay:.6s}@keyframes eq{from{height:5px}to{height:18px}}
+.timer{font-size:3rem;text-align:center;font-weight:800;padding:20px}
+textarea{min-height:140px}
 </style>
 </head>
 <body>
 <div class='app'>
-<div class='floatclock glass' id='miniClock'>00:00</div>
 <div class='topbar'>
-<div>
-<div class='bigtime' id='topTime'>00:00</div>
-<div id='topDate' style='opacity:.7;margin-top:6px'>Today</div>
-</div>
-<div class='topactions'>
-<button class='iconbtn glass' onclick='toggleTheme()'>🎨</button>
-<button class='iconbtn glass' id='installBtn'>⬇</button>
-<button class='iconbtn glass' onclick='openSounds()'>🔎</button>
-<button class='iconbtn glass' onclick='toggleMenu()'>⋮</button>
+<div id='liveTime'>00:00</div>
+<div class='row'>
+<button onclick='toggleTheme()'>🎨</button>
+<button onclick='openSounds()'>🎵</button>
+<button id='installBtn'>⬇</button>
+<button onclick='toggleMenu()'>⋮</button>
 </div>
 </div>
-<div class='pages'>
-<div class='page active' id='alarmPage'>
-<div class='hero glass'>
-<h1 id='mainClock'>00:00</h1>
-<p>AI Sleep Assistant • Weather 23°C • Focus Mode Active</p>
-<button class='bigbtn' onclick='openCreateAlarm()'>+ CREATE SMART ALARM</button>
-</div>
-<div class='sectiontitle'>Your Smart Alarms</div>
+<div class='main'>
+<div class='screen active' id='alarmScreen'>
+<div class='clock' id='heroClock'></div>
 <div id='alarmList'></div>
 </div>
-<div class='page' id='timerPage'>
-<div class='card glass'>
-<div class='timercircle' id='timerText'>25:00</div>
-<button class='bigbtn' onclick='startTimer()'>START FOCUS TIMER</button>
-<button class='bigbtn' onclick='stopTimer()'>STOP TIMER</button>
+<div class='screen' id='timerScreen'>
+<div class='card'><div class='timer' id='timerDisplay'>25:00</div>
+<div class='row'><button class='smallbtn' onclick='startTimer()'>Start</button><button class='smallbtn' onclick='pauseTimer()'>Pause</button><button class='smallbtn' onclick='resetTimer()'>Reset</button></div></div>
+</div>
+<div class='screen' id='stopwatchScreen'>
+<div class='card'><div class='timer' id='swDisplay'>00:00:00</div>
+<div class='row'><button class='smallbtn' onclick='startSW()'>Start</button><button class='smallbtn' onclick='stopSW()'>Stop</button><button class='smallbtn' onclick='resetSW()'>Reset</button><button class='smallbtn' onclick='lapSW()'>Lap</button></div><div id='laps'></div></div>
+</div>
+<div class='screen' id='clockScreen'>
+<div class='card'><h2>🌍 World Clock</h2><div id='world'></div></div>
+</div>
+<div class='screen' id='moreScreen'>
+<div class='card'><h2>📝 Notes</h2><textarea id='notes'></textarea><button class='smallbtn' onclick='saveNotes()'>Save Notes</button></div>
 </div>
 </div>
-<div class='page' id='stopwatchPage'>
-<div class='card glass'>
-<div class='timercircle' id='sw'>00:00</div>
-<button class='bigbtn' onclick='startSW()'>START STOPWATCH</button>
-<button class='bigbtn' onclick='stopSW()'>STOP</button>
+<button class='fab' onclick='openAlarmSheet()'>+</button>
+<div class='bottomnav'>
+<button class='navbtn' onclick='showScreen("alarmScreen")'>⏰</button>
+<button class='navbtn' onclick='showScreen("timerScreen")'>⏳</button>
+<button class='navbtn' onclick='showScreen("stopwatchScreen")'>⌚</button>
+<button class='navbtn' onclick='showScreen("clockScreen")'>🌍</button>
+<button class='navbtn' onclick='showScreen("moreScreen")'>☰</button>
 </div>
 </div>
-<div class='page' id='clockPage'>
-<div class='card glass'>
-<div class='sectiontitle'>World Clock</div>
-<div class='listitem glass'>🇮🇳 India — <span id='india'></span></div>
-<div class='listitem glass'>🇺🇸 New York — <span id='usa'></span></div>
-<div class='listitem glass'>🇯🇵 Tokyo — <span id='japan'></span></div>
-<div class='listitem glass'>🇦🇪 Dubai — <span id='dubai'></span></div>
+<div class='menu' id='menu'>
+<div class='row'><button onclick='applyTheme("amoled")'>AMOLED</button><button onclick='applyTheme("light")'>Light</button><button onclick='applyTheme("matrix")'>Matrix</button><button onclick='applyTheme("neon")'>Neon</button></div>
+<div class='row' style='margin-top:12px'><button onclick='openSounds()'>Sounds</button><button onclick='showScreen("moreScreen")'>Notes</button><button onclick='showScreen("timerScreen")'>Focus</button></div>
 </div>
-</div>
-<div class='page' id='morePage'>
-<div class='listitem glass'>🧠 AI Productivity Insights</div>
-<div class='listitem glass'>💧 Water Reminder</div>
-<div class='listitem glass'>😴 Sleep Tracker Simulation</div>
-<div class='listitem glass'>📅 Daily Planner</div>
-<div class='listitem glass'>📝 Notes</div>
-<div class='listitem glass'>🎧 Ambient Sounds</div>
-<div class='listitem glass'>📈 Habit Tracker</div>
-</div>
-</div>
-<div class='fab' onclick='openCreateAlarm()'>+</div>
-<div class='bottomnav glass'>
-<button class='navbtn active' onclick="showPage(event,'alarmPage')">⏰<span>Alarm</span></button>
-<button class='navbtn' onclick="showPage(event,'timerPage')">⏳<span>Timer</span></button>
-<button class='navbtn' onclick="showPage(event,'stopwatchPage')">⏱<span>Stopwatch</span></button>
-<button class='navbtn' onclick="showPage(event,'clockPage')">🌍<span>Clock</span></button>
-<button class='navbtn' onclick="showPage(event,'morePage')">☰<span>More</span></button>
-</div>
-</div>
-<div class='sheet glass' id='alarmSheet'>
-<div class='sheethead'>
-<h2>Create Alarm</h2>
-<button class='smallbtn' onclick='closeSheet()'>Close</button>
-</div>
-<input class='input' type='time' id='alarmTime'>
+<div class='sheet' id='alarmSheet'>
+<h2>Create Smart Alarm</h2>
+<input type='time' class='input' id='alarmTime'>
 <input class='input' id='alarmLabel' placeholder='Alarm Label'>
-<select class='input' id='alarmRepeat'>
-<option>Daily</option>
-<option>Monday-Friday</option>
-<option>Weekend</option>
-<option>One Time</option>
-<option>Custom</option>
-</select>
-<div class='card glass' style='padding:16px;margin-top:12px'>
-<div style='margin-bottom:10px;font-weight:800'>Custom Days</div>
-<div class='row' style='flex-wrap:wrap'>
-<label class='tag'><input type='checkbox' value='Mon' class='day'> Mon</label>
-<label class='tag'><input type='checkbox' value='Tue' class='day'> Tue</label>
-<label class='tag'><input type='checkbox' value='Wed' class='day'> Wed</label>
-<label class='tag'><input type='checkbox' value='Thu' class='day'> Thu</label>
-<label class='tag'><input type='checkbox' value='Fri' class='day'> Fri</label>
-<label class='tag'><input type='checkbox' value='Sat' class='day'> Sat</label>
-<label class='tag'><input type='checkbox' value='Sun' class='day'> Sun</label>
+<select id='repeat' class='input'><option>Daily</option><option>Monday-Friday</option><option>Weekend</option><option>One Time</option></select>
+<select id='soundSelect' class='input'></select>
+<div class='row'><button class='smallbtn' onclick='saveAlarm()'>Save Alarm</button><button class='smallbtn' onclick='closeSheet()'>Close</button></div>
 </div>
-</div>
-<select class='input' id='alarmSound'>
-<option>Classic Alarm</option>
-<option>Rain Sleep</option>
-<option>Cyberpunk Bass</option>
-<option>Soft Piano</option>
-<option>Gaming Alert</option>
-</select>
-<select class='input' id='alarmMission'>
-<option>Math Mission</option>
-<option>Captcha Mission</option>
-<option>Memory Mission</option>
-<option>Type Sentence</option>
-</select>
-<button class='bigbtn' onclick='saveAlarm()'>SAVE ALARM</button>
-</div>
-<div class='sheet glass' id='soundSheet'>
-<div class='sheethead'>
-<h2>Alarm Sounds</h2>
-<button class='smallbtn' onclick='closeSounds()'>Close</button>
-</div>
-<input class='search' placeholder='Search sounds...' oninput='renderSounds(this.value)'>
-<div class='soundgrid' id='soundGrid'></div>
-</div>
-<div class='menu glass' id='menu'>
-<button onclick='openSounds()'>🎵 Alarm Sounds</button>
-<button onclick='applyTheme("amoled")'>🌑 AMOLED</button>
-<button onclick='applyTheme("light")'>☀ Light</button>
-<button onclick='applyTheme("neon")'>🟢 Neon</button>
-<button onclick='applyTheme("gold")'>👑 Royal Gold</button>
-<button>🎨 Themes</button>
-<button onclick='voiceCommand()'>🎙 Voice Settings</button>
-<button>😴 Sleep Mode</button>
-<button>🧠 Focus Mode</button>
-<button>📈 Productivity</button>
-<button>📝 Notes</button>
-<button>🌍 World Clock</button>
-<button>⚙ Settings</button>
-<button>🤖 AI Assistant</button>
-</div>
-<div class='fullalarm' id='alarmModal'>
-<div class='ring'></div>
-<h1 style='margin-top:20px;font-size:3rem' id='ringText'>WAKE UP</h1>
-<div class='missionbox glass'>
-<div id='mission'></div>
-<input class='input' id='missionInput' placeholder='Enter answer'>
-<button class='bigbtn' onclick='solveMission()'>DISMISS ALARM</button>
-<button class='bigbtn' onclick='snooze()'>SNOOZE 5 MIN</button>
-</div>
+<div class='sheet' id='soundSheet'>
+<h2>Premium Sounds</h2>
+<div id='soundList'></div>
 </div>
 <script>
-let alarms=JSON.parse(localStorage.getItem('alarms')||'[]');
-let deferredPrompt,currentMission='';
 const sounds=[
-{name:'Glyph Pulse',cat:'Nothing Style',freq:420,duration:'0:12'},
-{name:'Nothing Orbit',cat:'Nothing Style',freq:480,duration:'0:11'},
-{name:'Dot Matrix',cat:'Nothing Style',freq:510,duration:'0:10'},
-{name:'Neon Ping',cat:'Nothing Style',freq:560,duration:'0:08'},
-{name:'Digital Air',cat:'Nothing Style',freq:620,duration:'0:09'},
-{name:'Radar',cat:'Apple Style',freq:350,duration:'0:12'},
-{name:'Reflection',cat:'Apple Style',freq:390,duration:'0:14'},
-{name:'Night Owl',cat:'Apple Style',freq:430,duration:'0:13'},
-{name:'Silk',cat:'Apple Style',freq:450,duration:'0:09'},
-{name:'Cosmic Bell',cat:'Apple Style',freq:520,duration:'0:15'},
-{name:'Morning Flower',cat:'Samsung Style',freq:340,duration:'0:12'},
-{name:'Calm Galaxy',cat:'Samsung Style',freq:370,duration:'0:12'},
-{name:'Space Alarm',cat:'Samsung Style',freq:580,duration:'0:10'},
-{name:'Digital Rise',cat:'Samsung Style',freq:610,duration:'0:11'},
-{name:'Soft Wake',cat:'Samsung Style',freq:300,duration:'0:15'},
-{name:'Material Chime',cat:'Pixel Style',freq:470,duration:'0:08'},
-{name:'Pixel Rise',cat:'Pixel Style',freq:500,duration:'0:11'},
-{name:'Gentle Bell',cat:'Pixel Style',freq:280,duration:'0:14'},
-{name:'Android Wake',cat:'Pixel Style',freq:640,duration:'0:10'},
-{name:'Rain',cat:'Nature',freq:220,duration:'0:20'},
-{name:'Ocean',cat:'Nature',freq:180,duration:'0:22'},
-{name:'Thunder',cat:'Nature',freq:120,duration:'0:18'},
-{name:'Forest',cat:'Nature',freq:260,duration:'0:16'},
-{name:'Birds',cat:'Nature',freq:700,duration:'0:14'},
-{name:'Waterfall',cat:'Nature',freq:200,duration:'0:18'},
-{name:'Wind',cat:'Nature',freq:150,duration:'0:17'},
-{name:'Tibetan Bowl',cat:'Meditation',freq:240,duration:'0:19'},
-{name:'Zen Bell',cat:'Meditation',freq:260,duration:'0:16'},
-{name:'Soft Flute',cat:'Meditation',freq:320,duration:'0:15'},
-{name:'Healing Tone',cat:'Meditation',freq:360,duration:'0:14'},
-{name:'LoFi Beat',cat:'LoFi',freq:410,duration:'0:18'},
-{name:'Chill Piano',cat:'LoFi',freq:390,duration:'0:20'},
-{name:'Dream Synth',cat:'LoFi',freq:520,duration:'0:17'},
-{name:'Neon Pulse',cat:'Cyberpunk',freq:680,duration:'0:11'},
-{name:'Cyber Alarm',cat:'Cyberpunk',freq:720,duration:'0:10'},
-{name:'AI Wake',cat:'Cyberpunk',freq:760,duration:'0:09'},
-{name:'Hologram Tone',cat:'Cyberpunk',freq:800,duration:'0:10'},
-{name:'Emergency Siren',cat:'Loud',freq:950,duration:'0:09'},
-{name:'Super Loud Bell',cat:'Loud',freq:900,duration:'0:11'},
-{name:'Military Alarm',cat:'Loud',freq:850,duration:'0:10'},
-{name:'Heavy Wake',cat:'Loud',freq:990,duration:'0:08'},
-{name:'Temple Bell',cat:'Spiritual',freq:230,duration:'0:15'},
-{name:'Azaan Style',cat:'Spiritual',freq:260,duration:'0:18'},
-{name:'Meditation Chant',cat:'Spiritual',freq:200,duration:'0:20'},
-{name:'Morning Prayer',cat:'Spiritual',freq:290,duration:'0:16'}
+{name:'Radar',type:'sine',freq:440},{name:'Reflection',type:'triangle',freq:540},{name:'Silk',type:'sine',freq:320},{name:'Night Owl',type:'square',freq:240},
+{name:'Morning Flower',type:'triangle',freq:460},{name:'Calm Galaxy',type:'sine',freq:370},{name:'Digital Rise',type:'sawtooth',freq:620},
+{name:'Glyph Pulse',type:'square',freq:700},{name:'Neon Air',type:'triangle',freq:560},
+{name:'Rain',type:'noise',freq:150},{name:'Ocean',type:'noise',freq:100},{name:'Birds',type:'sine',freq:900},
+{name:'Emergency',type:'square',freq:980},{name:'Siren',type:'sawtooth',freq:850},{name:'Heavy Bell',type:'triangle',freq:740}
 ];
-let activeOsc=null,activeGain=null,currentSound='Glyph Pulse',muted=false,volumeLevel=.5,favorites=JSON.parse(localStorage.getItem('favorites')||'[]');
-const soundGrid=document.getElementById('soundGrid');
-function renderSounds(filter=''){
-soundGrid.innerHTML=`<div class='card glass' style='position:sticky;top:0;z-index:2'>
-<div class='row'><button class='smallbtn' onclick='toggleMute()'>🔊 Mute</button><button class='smallbtn' onclick='stopPreview()'>⏹ Stop</button></div>
-<input type='range' min='0' max='1' step='0.01' value='0.5' onchange='setVolume(this.value)' style='width:100%;margin-top:16px'>
-</div>`;
-sounds.filter(s=>s.name.toLowerCase().includes(filter.toLowerCase())||s.cat.toLowerCase().includes(filter.toLowerCase())).forEach(s=>{
-let fav=favorites.includes(s.name);
-soundGrid.innerHTML+=`<div class='soundcard glass ${currentSound===s.name?'selected':''}' style='padding:24px;border:${currentSound===s.name?'2px solid var(--accent)':'1px solid rgba(255,255,255,.08)'}'>
-<div style='display:flex;gap:18px;align-items:center;width:100%'>
-<div style='width:74px;height:74px;border-radius:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:2rem'>🎵</div>
-<div style='flex:1'>
-<div class='soundtitle'>${s.name}</div>
-<div style='opacity:.6;margin-top:4px'>${s.cat} • ${s.duration}</div>
-<div class='eq' style='margin-top:10px'><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div></div>
-<div class='row' style='margin-top:14px;flex-wrap:wrap'>
-<button class='smallbtn' onclick='previewSound(${s.freq},"${s.name}")'>▶ Preview</button>
-<button class='smallbtn' onclick='selectSound("${s.name}")'>✓ Select</button>
-<button class='smallbtn' onclick='toggleFavorite("${s.name}")'>${fav?'💖':'🤍'} Favorite</button>
-</div>
-</div>
-</div>
-</div>`
-})
-}
+let alarms=JSON.parse(localStorage.getItem('alarms')||'[]');
+let editing=null;let currentAudio=null;let deferredPrompt;
+const alarmList=document.getElementById('alarmList');
+const soundList=document.getElementById('soundList');
+const soundSelect=document.getElementById('soundSelect');
+function renderSounds(){soundList.innerHTML='';soundSelect.innerHTML='';sounds.forEach(s=>{soundSelect.innerHTML+=`<option>${s.name}</option>`;soundList.innerHTML+=`<div class='soundcard'><div class='row'><div><b>${s.name}</b><div class='eq'><span></span><span></span><span></span><span></span></div></div><button class='smallbtn' onclick='previewSound("${s.name}")'>▶ Preview</button><button class='smallbtn' onclick='selectSound("${s.name}")'>✓ Select</button></div></div>`})}
 renderSounds();
-function updateClock(){
-let d=new Date();
-let t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-mainClock.innerText=t;
-topTime.innerText=t;
-miniClock.innerText=t;
-topDate.innerText=d.toDateString();
-india.innerText=new Date().toLocaleTimeString('en-IN');
-usa.innerText=new Date().toLocaleTimeString('en-US',{timeZone:'America/New_York'});
-japan.innerText=new Date().toLocaleTimeString('ja-JP',{timeZone:'Asia/Tokyo'});
-dubai.innerText=new Date().toLocaleTimeString('en-US',{timeZone:'Asia/Dubai'});
-checkAlarm();
-}
-setInterval(updateClock,1000);updateClock();
-function showPage(e,id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active'));e.currentTarget.classList.add('active')}
-function openCreateAlarm(){alarmSheet.classList.add('open')}
-function closeSheet(){alarmSheet.classList.remove('open')}
-function openSounds(){soundSheet.classList.add('open');menu.classList.remove('open')}
-function closeSounds(){soundSheet.classList.remove('open')}
-function toggleMenu(){
-menu.classList.toggle('open');
-menu.animate([{opacity:0,transform:'translateY(-10px)'},{opacity:1,transform:'translateY(0)'}],{duration:250,fill:'forwards'});
-}
-let editingIndex=null;
-function saveAlarm(){
-let custom=[...document.querySelectorAll('.day:checked')].map(x=>x.value).join(', ');
-let obj={time:alarmTime.value,label:alarmLabel.value||'Smart Alarm',repeat:alarmRepeat.value,customDays:custom,sound:alarmSound.value,mission:alarmMission.value,active:true,created:Date.now()};
-if(editingIndex!==null){alarms[editingIndex]=obj;editingIndex=null}else{alarms.unshift(obj)}
-localStorage.setItem('alarms',JSON.stringify(alarms));
+function previewSound(name){stopSound();const s=sounds.find(x=>x.name===name);const ctx=new(window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type=s.type==='noise'?'sine':s.type;osc.frequency.value=s.freq;osc.connect(gain);gain.connect(ctx.destination);gain.gain.value=.08;osc.start();if(s.type==='noise'){const lfo=ctx.createOscillator();lfo.frequency.value=8;lfo.connect(osc.frequency);lfo.start()}
+if(name==='Siren'){let up=true;var iv=setInterval(()=>{osc.frequency.value=up?1000:500;up=!up},300);setTimeout(()=>clearInterval(iv),2500)}
+currentAudio={ctx,osc};setTimeout(stopSound,2500)}
+function stopSound(){if(currentAudio){try{currentAudio.osc.stop()}catch(e){} currentAudio.ctx.close();currentAudio=null}}
+function selectSound(name){soundSelect.value=name;previewSound(name)}
+function renderAlarms(){alarmList.innerHTML='';alarms.forEach((a,i)=>{alarmList.innerHTML+=`<div class='card alarmcard'><div><div class='bigtime'>${a.time}</div><div>${a.label}</div><small>${a.repeat} • ${a.sound}</small></div><div class='row'><input type='checkbox' ${a.active?'checked':''} onchange='toggleAlarm(${i})'><button class='smallbtn' onclick='editAlarm(${i})'>Edit</button><button class='smallbtn' onclick='deleteAlarm(${i})'>Delete</button><button class='smallbtn' onclick='previewSound("${a.sound}")'>▶</button></div></div>`})
+localStorage.setItem('alarms',JSON.stringify(alarms))}
 renderAlarms();
-closeSheet();
-navigator.vibrate?.(80)
-}
-function renderAlarms(){
-alarmList.innerHTML='';
-alarms.forEach((a,i)=>{
-alarmList.innerHTML+=`<div class='alarmcard glass'>
-<div>
-<div class='alarmtime'>${a.time}</div>
-<div class='alarmlabel'>${a.label}</div>
-<div class='alarmmeta'>
-<div class='tag'>${a.customDays||a.repeat}</div>
-<div class='tag'>${a.repeat}</div>
-<div class='tag'>${a.sound}</div>
-<div class='tag'>Snooze 5m</div>
-</div>
-<div class='row' style='margin-top:14px'>
-<button class='smallbtn' onclick='previewSound(sounds.find(x=>x.name===\''+a.sound+'\')?.freq||520,a.sound)'>▶ Preview</b
-<button class='smallbtn' onclick='editAlarm(${i})'>✏ Edit</button>
-<button class='smallbtn' onclick='deleteAlarm(${i})'>🗑 Delete</button>
-</div>
-</div>
-<div class='toggle ${a.active?'active':''}' onclick='toggleAlarm(${i},this)'></div>
-</div>`
-})
-}
-renderAlarms();
-function toggleAlarm(i,el){alarms[i].active=!alarms[i].active;el.classList.toggle('active');localStorage.setItem('alarms',JSON.stringify(alarms))}
-function deleteAlarm(i){
-if(confirm('Delete this alarm?')){
-alarms.splice(i,1);
-localStorage.setItem('alarms',JSON.stringify(alarms));
-renderAlarms();
-}
-}
-function editAlarm(i){
-let a=alarms[i];
-editingIndex=i;
-alarmTime.value=a.time;
-alarmLabel.value=a.label;
-alarmRepeat.value=a.repeat;
-alarmSound.value=a.sound;
-alarmMission.value=a.mission;
-document.querySelectorAll('.day').forEach(d=>d.checked=(a.customDays||'').includes(d.value));
-openCreateAlarm();
-}
-function stopPreview(){
-if(activeGain){activeGain.gain.exponentialRampToValueAtTime(.0001,activeCtx.currentTime+.4)}
-if(activeOsc){try{activeOsc.stop(activeCtx.currentTime+.5)}catch(e){}}
-}
-let activeCtx=null;
-function previewSound(freq=520,name='Preview'){
-stopPreview();
-currentSound=name;
-renderSounds(document.querySelector('.search')?.value||'');
-activeCtx=new(window.AudioContext||window.webkitAudioContext)();
-activeOsc=activeCtx.createOscillator();
-activeGain=activeCtx.createGain();
-const filter=activeCtx.createBiquadFilter();
-filter.type='lowpass';
-filter.frequency.value=freq*2;
-activeOsc.connect(filter);
-filter.connect(activeGain);
-activeGain.connect(activeCtx.destination);
-let types=['sine','triangle','square','sawtooth'];
-let hash=[...name].reduce((a,c)=>a+c.charCodeAt(0),0);
-activeOsc.type=types[hash%types.length];
-activeOsc.frequency.setValueAtTime(freq,activeCtx.currentTime);
-activeOsc.frequency.exponentialRampToValueAtTime(freq+(hash%200),activeCtx.currentTime+1.2);
-activeGain.gain.setValueAtTime(.001,activeCtx.currentTime);
-activeGain.gain.exponentialRampToValueAtTime(muted?0:volumeLevel,activeCtx.currentTime+.3);
-activeGain.gain.exponentialRampToValueAtTime((muted?0:volumeLevel)/2,activeCtx.currentTime+2);
-const tremolo=activeCtx.createOscillator();
-const tremGain=activeCtx.createGain();
-tremolo.frequency.value=(hash%7)+2;
-tremGain.gain.value=15;
-tremolo.connect(tremGain);
-tremGain.connect(activeOsc.frequency);
-tremolo.start();
-activeOsc.start();
-if(name.includes('Rain')||name.includes('Ocean')||name.includes('Forest')){
-const buffer=activeCtx.createBuffer(1,activeCtx.sampleRate*2,activeCtx.sampleRate);
-const data=buffer.getChannelData(0);
-for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*0.15;
-const noise=activeCtx.createBufferSource();
-noise.buffer=buffer;
-noise.loop=true;
-const noiseFilter=activeCtx.createBiquadFilter();
-noiseFilter.type='lowpass';noiseFilter.frequency.value=800;
-noise.connect(noiseFilter);noiseFilter.connect(activeGain);noise.start();
-setTimeout(()=>noise.stop(),3000)
-}
-if(name.includes('Emergency')||name.includes('Military')||name.includes('Ultra')){
-let siren=setInterval(()=>{if(activeOsc)activeOsc.frequency.value=activeOsc.frequency.value>700?350:950},300);
-setTimeout(()=>clearInterval(siren),3000)
-}
-setTimeout(()=>{stopPreview()},3200)
-}
-function setVolume(v){volumeLevel=v;if(activeGain)activeGain.gain.value=muted?0:v}
-function toggleMute(){muted=!muted;if(activeGain)activeGain.gain.value=muted?0:volumeLevel}
-function selectSound(name){currentSound=name;alarmSound.value=name;localStorage.setItem('selectedSound',name);renderSounds(document.querySelector('.search')?.value||'');navigator.vibrate?.(50)}
-function toggleFavorite(name){
-if(favorites.includes(name)){favorites=favorites.filter(f=>f!==name)}else{favorites.push(name)}
-localStorage.setItem('favorites',JSON.stringify(favorites));
-renderSounds(document.querySelector('.search')?.value||'')
-}
-function checkAlarm(){
-let n=new Date();
-let t=n.toTimeString().slice(0,5);
-alarms.forEach(a=>{if(a.active&&a.time===t&&n.getSeconds()===0)triggerAlarm(a)})
-}
-function triggerAlarm(a){
-alarmModal.style.display='flex';ringText.innerText=a.label;
-if(a.mission.includes('Math')){let x=Math.ceil(Math.random()*9),y=Math.ceil(Math.random()*9);currentMission=x+y;mission.innerHTML=`<h2>${x}+${y} = ?</h2>`}
-else if(a.mission.includes('Captcha')){currentMission='YSN';mission.innerHTML='<h2>Type YSN</h2>'}
-else if(a.mission.includes('Memory')){currentMission='4821';mission.innerHTML='<h2>Remember 4821</h2>'}
-else{currentMission='I am awake';mission.innerHTML='<h2>Type: I am awake</h2>'}
-playAlarm();navigator.vibrate?.([300,100,300])
-}
-function solveMission(){if(missionInput.value==currentMission){alarmModal.style.display='none';speechSynthesis.speak(new SpeechSynthesisUtterance('Alarm dismissed'))}else alert('Wrong Answer')}
-function snooze(){alarmModal.style.display='none';setTimeout(()=>triggerAlarm({label:'Snoozed Alarm',mission:'Math'}),300000)}
-function playAlarm(){let c=new(window.AudioContext||window.webkitAudioContext)();let o=c.createOscillator();let g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=400;g.gain.setValueAtTime(.001,c.currentTime);g.gain.exponentialRampToValueAtTime(.3,c.currentTime+2);o.start();o.stop(c.currentTime+4)}
-let timer=1500,int;
-function startTimer(){clearInterval(int);int=setInterval(()=>{timer--;let m=Math.floor(timer/60).toString().padStart(2,'0');let s=(timer%60).toString().padStart(2,'0');timerText.innerText=`${m}:${s}`;if(timer<=0){clearInterval(int);alert('Focus Complete')}} ,1000)}
-function stopTimer(){clearInterval(int);timer=1500;timerText.innerText='25:00'}
-let swInt,swSec=0;
-function startSW(){clearInterval(swInt);swInt=setInterval(()=>{swSec++;let m=Math.floor(swSec/60).toString().padStart(2,'0');let s=(swSec%60).toString().padStart(2,'0');sw.innerText=`${m}:${s}`},1000)}
-function stopSW(){clearInterval(swInt);swSec=0;sw.innerText='00:00'}
-function applyTheme(t){
-const r=document.documentElement;
-if(t==='light'){r.style.setProperty('--bg','#f4f4f4');r.style.setProperty('--text','#111');r.style.setProperty('--card','rgba(255,255,255,.65)');r.style.setProperty('--accent','#2563eb');r.style.setProperty('--accent2','#7c3aed');document.body.style.background='#f4f4f4'}
-if(t==='amoled'){r.style.setProperty('--bg','#000');r.style.setProperty('--text','#fff');r.style.setProperty('--card','rgba(255,255,255,.06)');r.style.setProperty('--accent','#00ffe1');r.style.setProperty('--accent2','#0ea5e9');document.body.style.background='#000'}
-if(t==='neon'){r.style.setProperty('--bg','#06111f');r.style.setProperty('--text','#fff');r.style.setProperty('--card','rgba(0,255,225,.08)');r.style.setProperty('--accent','#39ff14');r.style.setProperty('--accent2','#00e5ff');document.body.style.background='#06111f'}
-if(t==='gold'){r.style.setProperty('--bg','#1a1204');r.style.setProperty('--text','#fff5d6');r.style.setProperty('--card','rgba(255,215,0,.08)');r.style.setProperty('--accent','#ffd700');r.style.setProperty('--accent2','#ffb300');document.body.style.background='#1a1204'}
-localStorage.setItem('themeMode',t)
-}
-function toggleTheme(){let modes=['amoled','light','neon','gold'];let current=localStorage.getItem('themeMode')||'amoled';let next=modes[(modes.indexOf(current)+1)%modes.length];applyTheme(next)}
-applyTheme(localStorage.getItem('themeMode')||'amoled');
-else{document.body.style.background='#050816';document.documentElement.style.setProperty('--text','#fff');document.documentElement.style.setProperty('--card','rgba(255,255,255,.08)');document.body.dataset.mode='dark'}
-}
-function voiceCommand(){
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return alert('Voice not supported');
-let r=new SR();r.start();r.onresult=e=>{let t=e.results[0][0].transcript.toLowerCase();if(t.includes('alarm')){speechSynthesis.speak(new SpeechSynthesisUtterance('Voice command received'));openCreateAlarm()}}
-}
-window.addEventListener('beforeinstallprompt',e=>{
-e.preventDefault();
-deferredPrompt=e;
-setTimeout(()=>{
-let banner=document.createElement('div');
-banner.className='glass';
-banner.style='position:fixed;left:14px;right:14px;top:90px;padding:18px;border-radius:24px;z-index:20;display:flex;justify-content:space-between;align-items:center';
-banner.innerHTML='<div><b>Install YSN SMART ALARM</b><div style="opacity:.7;font-size:.9rem">Get full-screen premium app experience</div></div><button id="installNow" class="smallbtn">Install</button>';
-document.body.appendChild(banner);
-document.getElementById('installNow').onclick=async()=>{deferredPrompt.prompt();banner.remove()};
-},1500)
-});
-installBtn.onclick=async()=>{
-if(deferredPrompt){
-await deferredPrompt.prompt();
-}
-else{
-alert('Use browser menu → Add to Home Screen');
-}
-}
-if('serviceWorker' in navigator){
-let sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{});`;
-navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'})));
-}
-const manifest={name:'YSN SMART ALARM',short_name:'YSN Alarm',display:'standalone',background_color:'#050816',theme_color:'#00ffe1',start_url:'.',icons:[{src:'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><rect width=%22200%22 height=%22200%22 fill=%22black%22/><text x=%2248%22 y=%22128%22 font-size=%2290%22 fill=%22cyan%22>⏰</text></svg>',sizes:'200x200',type:'image/svg+xml'}]};
-let mf=document.createElement('link');mf.rel='manifest';mf.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));document.head.appendChild(mf);
+function openAlarmSheet(){document.getElementById('alarmSheet').classList.add('open')}
+function closeSheet(){document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('open'))}
+function openSounds(){document.getElementById('soundSheet').classList.add('open')}
+function saveAlarm(){const obj={time:alarmTime.value,label:alarmLabel.value||'Smart Alarm',repeat:repeat.value,sound:soundSelect.value,active:true};if(editing!==null){alarms[editing]=obj;editing=null}else alarms.push(obj);renderAlarms();closeSheet()}
+function deleteAlarm(i){alarms.splice(i,1);renderAlarms()}
+function editAlarm(i){const a=alarms[i];editing=i;alarmTime.value=a.time;alarmLabel.value=a.label;repeat.value=a.repeat;soundSelect.value=a.sound;openAlarmSheet()}
+function toggleAlarm(i){alarms[i].active=!alarms[i].active;renderAlarms()}
+setInterval(()=>{const d=new Date();const t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});liveTime.innerText=t;heroClock.innerText=t;alarms.forEach(a=>{if(a.active&&a.time===d.toTimeString().slice(0,5)){previewSound(a.sound);alert('⏰ '+a.label)}})},1000)
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');toggleMenu(false)}
+function toggleMenu(force){const m=document.getElementById('menu');if(force===false){m.classList.remove('open');return}m.classList.toggle('open')}
+let themes={amoled:['#000','#00ffe1'],light:['#f4f4f4','#2563eb'],matrix:['#001500','#00ff66'],neon:['#050816','#ff00ff']}
+function applyTheme(t){document.body.style.background=themes[t][0];document.documentElement.style.setProperty('--accent',themes[t][1]);localStorage.setItem('theme',t)}
+function toggleTheme(){let arr=['amoled','light','matrix','neon'];let c=localStorage.getItem('theme')||'amoled';applyTheme(arr[(arr.indexOf(c)+1)%arr.length])}
+applyTheme(localStorage.getItem('theme')||'amoled');
+let timer=1500,timerInt;function renderTimer(){let m=String(Math.floor(timer/60)).padStart(2,'0');let s=String(timer%60).padStart(2,'0');timerDisplay.innerText=`${m}:${s}`}
+renderTimer();function startTimer(){clearInterval(timerInt);timerInt=setInterval(()=>{timer--;renderTimer();if(timer<=0){clearInterval(timerInt);previewSound('Emergency')}},1000)}
+function pauseTimer(){clearInterval(timerInt)}function resetTimer(){timer=1500;renderTimer()}
+let sw=0,swInt;function updateSW(){let h=String(Math.floor(sw/3600)).padStart(2,'0');let m=String(Math.floor(sw/60)%60).padStart(2,'0');let s=String(sw%60).padStart(2,'0');swDisplay.innerText=`${h}:${m}:${s}`}
+function startSW(){clearInterval(swInt);swInt=setInterval(()=>{sw++;updateSW()},1000)}function stopSW(){clearInterval(swInt)}function resetSW(){sw=0;updateSW();laps.innerHTML=''}function lapSW(){laps.innerHTML+=`<div>${swDisplay.innerText}</div>`}
+function saveNotes(){localStorage.setItem('notes',notes.value)}notes.value=localStorage.getItem('notes')||'';
+world.innerHTML=`<div>🇮🇳 India: ${new Date().toLocaleTimeString('en-IN')}</div><div>🇺🇸 USA: ${new Date().toLocaleTimeString('en-US')}</div><div>🇯🇵 Japan: ${new Date().toLocaleTimeString('ja-JP')}</div>`;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e})
+installBtn.onclick=()=>{if(deferredPrompt)deferredPrompt.prompt();else alert('Use Add to Home Screen')}
+const manifest={name:'YSN SMART ALARM',short_name:'YSN Alarm',display:'standalone',start_url:'./',background_color:'#000',theme_color:'#00ffe1',icons:[{src:'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="100%" height="100%" fill="black"/><text x="50%" y="52%" font-size="90" fill="cyan" text-anchor="middle">⏰</text></svg>'),sizes:'512x512',type:'image/svg+xml'}]};
+manifestPlaceholder.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+if('serviceWorker' in navigator){const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('offline'))))`;navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'})))}
 </script>
 </body>
 </html>
