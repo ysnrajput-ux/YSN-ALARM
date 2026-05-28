@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>YSN SMART ALARM</title>
+<style>
+:root{--bg:#070b14;--card:rgba(255,255,255,.08);--txt:#fff;--accent:#00ffe7;--accent2:#8b5cf6;--danger:#ff3b5c;--blur:20px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:Inter,Arial,sans-serif}
+body{background:radial-gradient(circle at top,#18243f,#05070d 60%);color:var(--txt);height:100vh;overflow:hidden}
+body:before{content:'';position:fixed;inset:-20%;background:conic-gradient(from 0deg,var(--accent),transparent,var(--accent2),transparent);animation:spin 20s linear infinite;opacity:.15;filter:blur(80px)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.app{position:relative;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:20px 18px 10px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:1.2rem;font-weight:800;letter-spacing:2px;background:linear-gradient(90deg,var(--accent),#fff);-webkit-background-clip:text;color:transparent}
+.glass{background:var(--card);backdrop-filter:blur(var(--blur));border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 20px rgba(0,255,231,.15)}
+.dashboard{padding:12px 18px;overflow:auto;flex:1;padding-bottom:100px}
+.clock-card{padding:25px;border-radius:32px;position:relative;overflow:hidden}
+.clock{font-size:4rem;font-weight:800;letter-spacing:3px}
+.date{opacity:.7;margin-top:6px}
+.greet{margin-top:10px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+.widget{padding:16px;border-radius:24px;min-height:120px;position:relative;overflow:hidden}
+.widget h3{font-size:.95rem;margin-bottom:10px;opacity:.8}
+.stat{font-size:2rem;font-weight:700}
+.alarm-list{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.alarm{padding:18px;border-radius:24px;display:flex;justify-content:space-between;align-items:center}
+.time{font-size:2rem;font-weight:800}
+.switch{width:52px;height:30px;background:#222;border-radius:30px;position:relative}
+.switch:before{content:'';position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.3s}
+.switch.active{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.switch.active:before{left:25px}
+.fab{position:fixed;right:20px;bottom:90px;width:65px;height:65px;border-radius:50%;display:grid;place-items:center;font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 30px rgba(0,255,231,.5);z-index:5}
+.nav{position:fixed;left:12px;right:12px;bottom:12px;height:70px;border-radius:28px;display:flex;justify-content:space-around;align-items:center;z-index:4}
+.nav button{background:none;border:none;color:#fff;font-size:.8rem;display:flex;flex-direction:column;gap:5px;align-items:center;opacity:.6}
+.nav button.active{opacity:1;color:var(--accent)}
+.screen{display:none;animation:fade .4s}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.input,.select,textarea{width:100%;padding:14px;border:none;border-radius:18px;background:rgba(255,255,255,.07);color:#fff;margin-top:10px}
+.btn{padding:14px;border:none;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000;font-weight:800;width:100%;margin-top:10px}
+.timer-ring{width:160px;height:160px;border-radius:50%;margin:20px auto;border:8px solid rgba(255,255,255,.1);display:grid;place-items:center;font-size:2rem;font-weight:800;box-shadow:0 0 25px rgba(0,255,231,.3) inset}
+.todo{display:flex;gap:10px;align-items:center;padding:12px;border-radius:18px;margin-top:10px}
+.note{padding:16px;border-radius:18px;margin-top:10px}
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.theme{height:70px;border-radius:20px;border:2px solid rgba(255,255,255,.1)}
+.matrix{position:fixed;inset:0;pointer-events:none;opacity:.08;mix-blend-mode:screen}
+.fullscreen-alarm{position:fixed;inset:0;background:#000;z-index:99;display:none;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px}
+.ring{width:220px;height:220px;border-radius:50%;border:10px solid var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.06);box-shadow:0 0 60px var(--accent)}}
+.mission{margin-top:20px;padding:20px;border-radius:25px;width:100%;max-width:320px}
+.weather{opacity:.7;font-size:.9rem}
+::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<canvas class="matrix"></canvas>
+<div class="app">
+<div class="header">
+<div>
+<div class="logo">YSN SMART ALARM</div>
+<div class="weather">☁ 22°C • Productivity Mode</div>
+</div>
+<button class="glass" style="padding:12px 16px;border-radius:18px;border:none;color:#fff" onclick="toggleTheme()">Theme</button>
+</div>
+<div class="dashboard">
+<section id="home" class="screen active">
+<div class="clock-card glass">
+<div class="clock" id="clock">00:00</div>
+<div class="date" id="date"></div>
+<div class="greet" id="greet">Good Evening</div>
+</div>
+<div class="grid">
+<div class="widget glass"><h3>Focus Score</h3><div class="stat" id="focusScore">92%</div></div>
+<div class="widget glass"><h3>Sleep AI</h3><div class="stat">7.8h</div></div>
+<div class="widget glass"><h3>Pomodoro</h3><div class="stat" id="pomodoro">25m</div></div>
+<div class="widget glass"><h3>Hydration</h3><div class="stat">4/8</div></div>
+</div>
+<div class="alarm-list" id="alarmList"></div>
+</section>
+<section id="alarms" class="screen">
+<div class="glass" style="padding:18px;border-radius:28px">
+<input id="alarmTime" type="time" class="input">
+<input id="alarmLabel" class="input" placeholder="Alarm Label">
+<select id="alarmMission" class="select"><option>Math</option><option>Captcha</option><option>Memory</option><option>Type Sentence</option></select>
+<button class="btn" onclick="addAlarm()">Create Smart Alarm</button>
+</div>
+<div id="allAlarms"></div>
+</section>
+<section id="focus" class="screen">
+<div class="glass" style="padding:18px;border-radius:28px;text-align:center">
+<div class="timer-ring" id="timerDisplay">25:00</div>
+<button class="btn" onclick="startPomodoro()">Start Focus</button>
+<button class="btn" onclick="stopPomodoro()">Stop</button>
+</div>
+</section>
+<section id="notes" class="screen">
+<div class="glass" style="padding:18px;border-radius:28px">
+<textarea id="noteInput" class="input" placeholder="Write note"></textarea>
+<button class="btn" onclick="saveNote()">Save Note</button>
+<div id="notesList"></div>
+</div>
+</section>
+<section id="settings" class="screen">
+<div class="glass" style="padding:18px;border-radius:28px">
+<h2>Themes</h2>
+<div class="theme-grid">
+<div class="theme" style="background:#000" onclick="setTheme('#00ffe7','#8b5cf6','#05070d')"></div>
+<div class="theme" style="background:#1a1a1a" onclick="setTheme('#00ff99','#0f0','#000')"></div>
+<div class="theme" style="background:#111827" onclick="setTheme('#f59e0b','#f43f5e','#111827')"></div>
+<div class="theme" style="background:#f5f5f5" onclick="setTheme('#111','#777','#e8e8e8')"></div>
+<div class="theme" style="background:#12001e" onclick="setTheme('#ff00ff','#00f7ff','#12001e')"></div>
+<div class="theme" style="background:#001220" onclick="setTheme('#38bdf8','#818cf8','#001220')"></div>
+</div>
+<button class="btn" onclick="voiceCommand()">Voice Assistant</button>
+<button class="btn" onclick="speakTime()">Speak Current Time</button>
+</div>
+</section>
+</div>
+<div class="fab" onclick="quickAlarm()">+</div>
+<div class="nav glass">
+<button class="active" onclick="showScreen(event,'home')">⌂<span>Home</span></button>
+<button onclick="showScreen(event,'alarms')">⏰<span>Alarms</span></button>
+<button onclick="showScreen(event,'focus')">◉<span>Focus</span></button>
+<button onclick="showScreen(event,'notes')">✎<span>Notes</span></button>
+<button onclick="showScreen(event,'settings')">⚙<span>Settings</span></button>
+</div>
+</div>
+<div class="fullscreen-alarm" id="alarmModal">
+<div class="ring"></div>
+<h1 style="margin-top:20px" id="ringLabel">Wake Up</h1>
+<p>Complete mission to dismiss</p>
+<div class="mission glass">
+<div id="missionText"></div>
+<input id="missionAnswer" class="input" placeholder="Answer">
+<button class="btn" onclick="solveMission()">Dismiss Alarm</button>
+<button class="btn" onclick="snoozeAlarm()">Snooze 5 Min</button>
+</div>
+</div>
+<script>
+const alarms=JSON.parse(localStorage.getItem('ysnAlarms')||'[]');
+const notes=JSON.parse(localStorage.getItem('ysnNotes')||'[]');
+let currentMissionAnswer='';
+let currentAlarm=null;
+let pomodoroInt=null,pomodoroTime=1500;
+function updateClock(){
+const n=new Date();
+clock.innerText=n.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+date.innerText=n.toDateString();
+const h=n.getHours();
+greet.innerText=h<12?'Good Morning AI User':h<18?'Good Afternoon Warrior':'Good Evening Legend';
+checkAlarms();
+}
+setInterval(updateClock,1000);updateClock();
+function renderAlarms(){
+const list=document.getElementById('alarmList');
+const all=document.getElementById('allAlarms');
+list.innerHTML='';all.innerHTML='';
+alarms.forEach((a,i)=>{
+const el=`<div class='alarm glass'><div><div class='time'>${a.time}</div><small>${a.label}</small></div><div class='switch ${a.active?'active':''}' onclick='toggleAlarm(${i})'></div></div>`;
+list.innerHTML+=el;all.innerHTML+=el;
+});
+localStorage.setItem('ysnAlarms',JSON.stringify(alarms));
+}
+renderAlarms();
+function addAlarm(){
+const time=alarmTime.value;if(!time)return alert('Select time');
+alarms.push({time,label:alarmLabel.value||'Smart Alarm',mission:alarmMission.value,active:true});
+renderAlarms();navigator.vibrate?.(100);
+}
+function toggleAlarm(i){alarms[i].active=!alarms[i].active;renderAlarms()}
+function checkAlarms(){
+const n=new Date();
+const t=n.toTimeString().slice(0,5);
+alarms.forEach(a=>{if(a.active&&a.time===t&&n.getSeconds()===0)triggerAlarm(a)});
+}
+function triggerAlarm(a){
+currentAlarm=a;
+document.getElementById('alarmModal').style.display='flex';
+document.getElementById('ringLabel').innerText=a.label;
+let q='';
+if(a.mission==='Math'){let x=Math.ceil(Math.random()*9),y=Math.ceil(Math.random()*9);currentMissionAnswer=x+y;q=`Solve: ${x}+${y}`}
+else if(a.mission==='Captcha'){currentMissionAnswer='YSN';q='Type YSN'}
+else if(a.mission==='Memory'){currentMissionAnswer='4821';q='Remember: 4821'}
+else {currentMissionAnswer='I am awake';q='Type: I am awake'}
+missionText.innerText=q;
+playSound();navigator.vibrate?.([300,100,300]);
+}
+function solveMission(){
+if(missionAnswer.value==currentMissionAnswer){alarmModal.style.display='none';speechSynthesis.speak(new SpeechSynthesisUtterance('Alarm dismissed'))}
+else alert('Wrong answer')
+}
+function snoozeAlarm(){alarmModal.style.display='none';setTimeout(()=>triggerAlarm(currentAlarm),300000)}
+function playSound(){
+const ctx=new(window.AudioContext||window.webkitAudioContext)();
+const o=ctx.createOscillator();const g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=440;g.gain.setValueAtTime(0.001,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.3,ctx.currentTime+2);o.start();o.stop(ctx.currentTime+4);
+}
+function showScreen(e,id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));e.currentTarget.classList.add('active')}
+function startPomodoro(){clearInterval(pomodoroInt);pomodoroInt=setInterval(()=>{pomodoroTime--;let m=Math.floor(pomodoroTime/60).toString().padStart(2,'0');let s=(pomodoroTime%60).toString().padStart(2,'0');timerDisplay.innerText=`${m}:${s}`;if(pomodoroTime<=0){clearInterval(pomodoroInt);alert('Focus session complete')}} ,1000)}
+function stopPomodoro(){clearInterval(pomodoroInt);pomodoroTime=1500;timerDisplay.innerText='25:00'}
+function saveNote(){const v=noteInput.value;if(!v)return;notes.unshift(v);localStorage.setItem('ysnNotes',JSON.stringify(notes));renderNotes();noteInput.value=''}
+function renderNotes(){notesList.innerHTML='';notes.forEach(n=>notesList.innerHTML+=`<div class='note glass'>${n}</div>`)}
+renderNotes();
+function setTheme(a,b,bg){document.documentElement.style.setProperty('--accent',a);document.documentElement.style.setProperty('--accent2',b);document.documentElement.style.setProperty('--bg',bg);document.body.style.background=`radial-gradient(circle at top,${b},${bg} 60%)`;localStorage.setItem('theme',JSON.stringify([a,b,bg]))}
+const th=JSON.parse(localStorage.getItem('theme')||'null');if(th)setTheme(...th);
+function toggleTheme(){document.body.classList.toggle('light')}
+function quickAlarm(){let d=new Date(Date.now()+60000);alarmTime.value=d.toTimeString().slice(0,5);showScreen({currentTarget:document.querySelectorAll('.nav button')[1]},'alarms')}
+function voiceCommand(){
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return alert('Voice not supported');
+const rec=new SR();rec.start();rec.onresult=e=>{const txt=e.results[0][0].transcript.toLowerCase();if(txt.includes('alarm')){let m=txt.match(/(\d+)/);if(m){alarmTime.value=`${m[1].padStart(2,'0')}:00`;speechSynthesis.speak(new SpeechSynthesisUtterance('Alarm prepared'))}}}
+}
+function speakTime(){speechSynthesis.speak(new SpeechSynthesisUtterance('Current time is '+new Date().toLocaleTimeString()))}
+const c=document.querySelector('.matrix'),x=c.getContext('2d');let w,h,cols,ypos;
+function matrix(){w=c.width=innerWidth;h=c.height=innerHeight;cols=Math.floor(w/20);ypos=Array(cols).fill(0)}matrix();
+function rain(){x.fillStyle='rgba(0,0,0,.08)';x.fillRect(0,0,w,h);x.fillStyle='#0f0';x.font='15pt monospace';ypos.forEach((y,ind)=>{const t=String.fromCharCode(Math.random()*128);const xp=ind*20;x.fillText(t,xp,y);if(y>100+Math.random()*10000)ypos[ind]=0;else ypos[ind]=y+20})}
+setInterval(rain,50);onresize=matrix;
+if('serviceWorker' in navigator){
+const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>{})`;
+navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'})));
+}
+const manifest={name:'YSN SMART ALARM',short_name:'YSN Alarm',display:'standalone',start_url:'.',background_color:'#000000',theme_color:'#00ffe7',icons:[{src:'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22><rect width=%22200%22 height=%22200%22 fill=%22black%22/><text x=%2250%22 y=%22120%22 font-size=%2290%22 fill=%22cyan%22>⏰</text></svg>',sizes:'200x200',type:'image/svg+xml'}]};
+const link=document.createElement('link');link.rel='manifest';link.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));document.head.appendChild(link);
+</script>
+</body>
+</html>
