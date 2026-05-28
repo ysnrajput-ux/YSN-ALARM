@@ -33,7 +33,7 @@ body{margin:0;font-family:Inter,system-ui;background:radial-gradient(circle at t
 .eq{display:flex;gap:4px;height:18px;align-items:end}.eq span{width:4px;background:var(--accent);border-radius:9px;animation:eq 1s infinite alternate}.eq span:nth-child(2){animation-delay:.2s}.eq span:nth-child(3){animation-delay:.4s}.eq span:nth-child(4){animation-delay:.6s}@keyframes eq{from{height:5px}to{height:18px}}
 .timer{font-size:3rem;text-align:center;font-weight:800;padding:20px}
 textarea{min-height:140px}
-</style>
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(circle at 20% 20%,rgba(0,255,255,.15),transparent 30%),radial-gradient(circle at 80% 30%,rgba(255,0,255,.12),transparent 30%),radial-gradient(circle at 50% 90%,rgba(0,255,120,.10),transparent 30%);animation:aurora 12s linear infinite;pointer-events:none} @keyframes aurora{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}} .particle{position:fixed;width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);animation:float 10s linear infinite}.widget{padding:16px;border-radius:24px;background:rgba(255,255,255,.06);margin-top:12px}.ringing{animation:ring 1s infinite}@keyframes ring{0%{transform:scale(1)}50%{transform:scale(1.04)}100%{transform:scale(1)}} @keyframes float{from{transform:translateY(100vh)}to{transform:translateY(-10vh)}} </style>
 </head>
 <body>
 <div class='app'>
@@ -92,12 +92,26 @@ textarea{min-height:140px}
 <div id='soundList'></div>
 </div>
 <script>
+const alarmHistory=JSON.parse(localStorage.getItem('alarmHistory')||'[]');
 const sounds=[
 {name:'Radar',type:'sine',freq:440},{name:'Reflection',type:'triangle',freq:540},{name:'Silk',type:'sine',freq:320},{name:'Night Owl',type:'square',freq:240},
 {name:'Morning Flower',type:'triangle',freq:460},{name:'Calm Galaxy',type:'sine',freq:370},{name:'Digital Rise',type:'sawtooth',freq:620},
 {name:'Glyph Pulse',type:'square',freq:700},{name:'Neon Air',type:'triangle',freq:560},
 {name:'Rain',type:'noise',freq:150},{name:'Ocean',type:'noise',freq:100},{name:'Birds',type:'sine',freq:900},
-{name:'Emergency',type:'square',freq:980},{name:'Siren',type:'sawtooth',freq:850},{name:'Heavy Bell',type:'triangle',freq:740}
+{name:'Emergency',type:'square',freq:980},{name:'Siren',type:'sawtooth',freq:850},{name:'Heavy Bell',type:'triangle',freq:740},
+{name:'Cosmic',type:'sawtooth',freq:420},
+{name:'Ripples',type:'sine',freq:280},
+{name:'Summit',type:'triangle',freq:510},
+{name:'Galaxy Wake',type:'square',freq:620},
+{name:'Soft Morning',type:'sine',freq:240},
+{name:'Matrix Ping',type:'square',freq:880},
+{name:'Cyber Pulse',type:'sawtooth',freq:760},
+{name:'Material Bell',type:'triangle',freq:450},
+{name:'Android Rise',type:'sine',freq:350},
+{name:'Thunder',type:'sawtooth',freq:120},
+{name:'Forest',type:'noise',freq:140},
+{name:'Zen Bell',type:'triangle',freq:300},
+{name:'Soft Flute',type:'sine',freq:650}
 ];
 let alarms=JSON.parse(localStorage.getItem('alarms')||'[]');
 let editing=null;let currentAudio=null;let deferredPrompt;
@@ -106,10 +120,12 @@ const soundList=document.getElementById('soundList');
 const soundSelect=document.getElementById('soundSelect');
 function renderSounds(){soundList.innerHTML='';soundSelect.innerHTML='';sounds.forEach(s=>{soundSelect.innerHTML+=`<option>${s.name}</option>`;soundList.innerHTML+=`<div class='soundcard'><div class='row'><div><b>${s.name}</b><div class='eq'><span></span><span></span><span></span><span></span></div></div><button class='smallbtn' onclick='previewSound("${s.name}")'>▶ Preview</button><button class='smallbtn' onclick='selectSound("${s.name}")'>✓ Select</button></div></div>`})}
 renderSounds();
+let alarmLoopInterval=null;
+function startAlarmLoop(name){stopSound();const s=sounds.find(x=>x.name===name)||sounds[0];const ctx=new(window.AudioContext||window.webkitAudioContext)();let gain=ctx.createGain();gain.connect(ctx.destination);gain.gain.value=.03;let active=true;function pulse(){if(!active)return;const osc=ctx.createOscillator();osc.type=s.type==='noise'?'sine':s.type;osc.frequency.value=s.freq+(Math.random()*80);osc.connect(gain);osc.start();osc.stop(ctx.currentTime+1.2)} pulse();alarmLoopInterval=setInterval(()=>{pulse();if(gain.gain.value<0.25)gain.gain.value+=0.01},1400);currentAudio={ctx,stop:()=>{active=false;clearInterval(alarmLoopInterval);ctx.close()}}}
 function previewSound(name){stopSound();const s=sounds.find(x=>x.name===name);const ctx=new(window.AudioContext||window.webkitAudioContext)();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type=s.type==='noise'?'sine':s.type;osc.frequency.value=s.freq;osc.connect(gain);gain.connect(ctx.destination);gain.gain.value=.08;osc.start();if(s.type==='noise'){const lfo=ctx.createOscillator();lfo.frequency.value=8;lfo.connect(osc.frequency);lfo.start()}
 if(name==='Siren'){let up=true;var iv=setInterval(()=>{osc.frequency.value=up?1000:500;up=!up},300);setTimeout(()=>clearInterval(iv),2500)}
 currentAudio={ctx,osc};setTimeout(stopSound,2500)}
-function stopSound(){if(currentAudio){try{currentAudio.osc.stop()}catch(e){} currentAudio.ctx.close();currentAudio=null}}
+function stopSound(){if(currentAudio){try{if(currentAudio.osc)currentAudio.osc.stop();if(currentAudio.stop)currentAudio.stop()}catch(e){}try{if(currentAudio.ctx)currentAudio.ctx.close()}catch(e){}currentAudio=null}clearInterval(alarmLoopInterval)}
 function selectSound(name){soundSelect.value=name;previewSound(name)}
 function renderAlarms(){alarmList.innerHTML='';alarms.forEach((a,i)=>{alarmList.innerHTML+=`<div class='card alarmcard'><div><div class='bigtime'>${a.time}</div><div>${a.label}</div><small>${a.repeat} • ${a.sound}</small></div><div class='row'><input type='checkbox' ${a.active?'checked':''} onchange='toggleAlarm(${i})'><button class='smallbtn' onclick='editAlarm(${i})'>Edit</button><button class='smallbtn' onclick='deleteAlarm(${i})'>Delete</button><button class='smallbtn' onclick='previewSound("${a.sound}")'>▶</button></div></div>`})
 localStorage.setItem('alarms',JSON.stringify(alarms))}
@@ -121,7 +137,8 @@ function saveAlarm(){const obj={time:alarmTime.value,label:alarmLabel.value||'Sm
 function deleteAlarm(i){alarms.splice(i,1);renderAlarms()}
 function editAlarm(i){const a=alarms[i];editing=i;alarmTime.value=a.time;alarmLabel.value=a.label;repeat.value=a.repeat;soundSelect.value=a.sound;openAlarmSheet()}
 function toggleAlarm(i){alarms[i].active=!alarms[i].active;renderAlarms()}
-setInterval(()=>{const d=new Date();const t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});liveTime.innerText=t;heroClock.innerText=t;alarms.forEach(a=>{if(a.active&&a.time===d.toTimeString().slice(0,5)){previewSound(a.sound);alert('⏰ '+a.label)}})},1000)
+setInterval(()=>{const d=new Date();const t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});liveTime.innerText=t;heroClock.innerText=t;alarms.forEach(a=>{if(a.active&&a.time===d.toTimeString().slice(0,5)&&!a.ringing){a.ringing=true;startAlarmLoop(a.sound);alarmHistory.push({label:a.label,time:new Date().toLocaleString()});localStorage.setItem('alarmHistory',JSON.stringify(alarmHistory));const popup=document.createElement('div');popup.className='sheet open ringing';popup.innerHTML=`<h1>⏰ ${a.label}</h1><p>${a.sound}</p><div class='row'><button class='smallbtn' id='dismissBtn'>Dismiss</button><button class='smallbtn' id='snoozeBtn'>Snooze 5m</button></div>`;document.body.appendChild(popup);document.getElementById('dismissBtn').onclick=()=>{stopSound();a.ringing=false;popup.remove()};document.getElementById('snoozeBtn').onclick=()=>{stopSound();a.ringing=false;let now=new Date();now.setMinutes(now.getMinutes()+5);a.time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAlarms();popup.remove()}}
+})},1000)
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');toggleMenu(false)}
 function toggleMenu(force){const m=document.getElementById('menu');if(force===false){m.classList.remove('open');return}m.classList.toggle('open')}
 let themes={amoled:['#000','#00ffe1'],light:['#f4f4f4','#2563eb'],matrix:['#001500','#00ff66'],neon:['#050816','#ff00ff']}
@@ -140,6 +157,141 @@ installBtn.onclick=()=>{if(deferredPrompt)deferredPrompt.prompt();else alert('Us
 const manifest={name:'YSN SMART ALARM',short_name:'YSN Alarm',display:'standalone',start_url:'./',background_color:'#000',theme_color:'#00ffe1',icons:[{src:'data:image/svg+xml;base64,'+btoa('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="100%" height="100%" fill="black"/><text x="50%" y="52%" font-size="90" fill="cyan" text-anchor="middle">⏰</text></svg>'),sizes:'512x512',type:'image/svg+xml'}]};
 manifestPlaceholder.href=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
 if('serviceWorker' in navigator){const sw=`self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',e=>e.respondWith(fetch(e.request).catch(()=>new Response('offline'))))`;navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/javascript'})))}
+// Advanced repeating alarm engine
+function shouldRing(alarm,date){
+const day=date.getDay();
+if(alarm.repeat==='Daily') return true;
+if(alarm.repeat==='Monday-Friday') return day>=1&&day<=5;
+if(alarm.repeat==='Weekend') return day===0||day===6;
+if(alarm.repeat==='One Time') return true;
+if(Array.isArray(alarm.custom)) return alarm.custom.includes(day);
+return true;
+}
+
+// Alarm modal for ringing
+const ringModal=document.createElement('div');
+ringModal.style.cssText='position:fixed;inset:0;background:#000d;backdrop-filter:blur(20px);display:none;z-index:999;align-items:center;justify-content:center;flex-direction:column;color:#fff';
+ringModal.innerHTML=`<div style="font-size:4rem">⏰</div><h1 id='ringTitle'>Alarm</h1><div class='row'><button class='smallbtn' id='dismissBtn'>Dismiss</button><button class='smallbtn' id='snoozeBtn'>Snooze 5m</button></div>`;
+document.body.appendChild(ringModal);
+document.getElementById('dismissBtn').onclick=()=>{ringModal.style.display='none';stopSound()};
+document.getElementById('snoozeBtn').onclick=()=>{ringModal.style.display='none';stopSound();if(activeAlarmIndex!==null){const now=new Date();now.setMinutes(now.getMinutes()+5);alarms[activeAlarmIndex].time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderAlarms()}};
+let activeAlarmIndex=null;
+
+// Improved alarm checker
+setInterval(()=>{
+const d=new Date();
+const hh=String(d.getHours()).padStart(2,'0');
+const mm=String(d.getMinutes()).padStart(2,'0');
+const current=`${hh}:${mm}`;
+alarms.forEach((a,i)=>{
+if(a.active&&a.time===current&&shouldRing(a,d)){
+activeAlarmIndex=i;
+ringTitle.innerText=a.label;
+ringModal.style.display='flex';
+previewSound(a.sound);
+if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+}
+})
+},1000);
+
+// Focus timer
+const focusCard=document.createElement('div');
+focusCard.className='card';
+focusCard.innerHTML=`<h2>🎯 Focus Mode</h2><div class='timer' id='focusDisplay'>50:00</div><div class='row'><button class='smallbtn' onclick='startFocus()'>Start Focus</button><button class='smallbtn' onclick='resetFocus()'>Reset</button></div>`;
+document.getElementById('moreScreen').appendChild(focusCard);
+let focusTime=3000,focusInt;
+function updateFocus(){let m=String(Math.floor(focusTime/60)).padStart(2,'0');let s=String(focusTime%60).padStart(2,'0');focusDisplay.innerText=`${m}:${s}`}
+function startFocus(){clearInterval(focusInt);focusInt=setInterval(()=>{focusTime--;updateFocus();if(focusTime<=0){clearInterval(focusInt);previewSound('Zen Bell')}},1000)}
+function resetFocus(){focusTime=3000;updateFocus()}
+updateFocus();
+
+// Habit tracker
+const habitCard=document.createElement('div');
+habitCard.className='card';
+habitCard.innerHTML=`<h2>💧 Habit Tracker</h2><div class='row'><button class='smallbtn' onclick='toggleHabit(this)'>Drink Water</button><button class='smallbtn' onclick='toggleHabit(this)'>Workout</button><button class='smallbtn' onclick='toggleHabit(this)'>Study</button></div>`;
+document.getElementById('moreScreen').appendChild(habitCard);
+function toggleHabit(btn){btn.style.background=btn.style.background?'':'linear-gradient(135deg,var(--accent),var(--accent2))'}
+
+// Floating particles
+for(let i=0;i<35;i++){
+const p=document.createElement('div');
+p.style.cssText=`position:fixed;width:${Math.random()*8+2}px;height:${Math.random()*8+2}px;border-radius:50%;background:rgba(0,255,225,.3);left:${Math.random()*100}%;top:${Math.random()*100}%;pointer-events:none;animation:float ${Math.random()*10+10}s linear infinite`;
+document.body.appendChild(p)
+}
+const style=document.createElement('style');
+style.innerHTML='@keyframes float{from{transform:translateY(100vh)}to{transform:translateY(-120vh)}}';
+document.head.appendChild(style);
+
+// Search sounds
+const search=document.createElement('input');
+search.className='input';
+search.placeholder='Search sounds...';
+search.oninput=()=>{
+const q=search.value.toLowerCase();
+document.querySelectorAll('.soundcard').forEach(c=>{c.style.display=c.innerText.toLowerCase().includes(q)?'block':'none'})
+};
+soundSheet.prepend(search);
+
+// Volume control
+const volumeWrap=document.createElement('div');
+volumeWrap.className='card';
+volumeWrap.innerHTML=`<h3>🔊 Volume</h3><input type='range' min='0' max='1' step='0.01' value='0.08' id='vol'>`;
+soundSheet.prepend(volumeWrap);
+document.getElementById('vol').oninput=e=>window.previewVolume=parseFloat(e.target.value);
+window.previewVolume=.08;
+
+// Override preview sound with better audio
+previewSound=function(name){
+stopSound();
+const s=sounds.find(x=>x.name===name)||sounds[0];
+const ctx=new(window.AudioContext||window.webkitAudioContext)();
+const gain=ctx.createGain();
+gain.gain.value=window.previewVolume;
+gain.connect(ctx.destination);
+const osc=ctx.createOscillator();
+osc.type=s.type==='noise'?'triangle':s.type;
+osc.frequency.value=s.freq;
+osc.connect(gain);
+osc.start();
+if(name.includes('Rain')||name.includes('Ocean')||name.includes('Forest')){
+const buffer=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);
+const data=buffer.getChannelData(0);
+for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*0.12;
+const white=ctx.createBufferSource();
+white.buffer=buffer;
+white.loop=true;
+white.connect(gain);
+white.start();
+currentAudio={ctx,osc:white};
+}else if(name.includes('Emergency')||name.includes('Military')||name.includes('Ultra')){
+let up=true;
+const siren=setInterval(()=>{osc.frequency.value=up?950:450;up=!up},250);
+setTimeout(()=>clearInterval(siren),5000);
+currentAudio={ctx,osc};
+}else{
+const lfo=ctx.createOscillator();
+const lfoGain=ctx.createGain();
+lfo.frequency.value=5;
+lfoGain.gain.value=25;
+lfo.connect(lfoGain);
+lfoGain.connect(osc.frequency);
+lfo.start();
+currentAudio={ctx,osc};
+}
+setTimeout(stopSound,5000)
+}
+
+// Close sheets when tapping outside
+window.addEventListener('click',e=>{
+if(e.target.classList.contains('sheet')) e.target.classList.remove('open');
+});
+
+// Save settings persistently
+window.addEventListener('beforeunload',()=>{
+localStorage.setItem('alarms',JSON.stringify(alarms));
+localStorage.setItem('theme',localStorage.getItem('theme')||'amoled');
+});
+
 </script>
-</body>
+<script>for(let i=0;i<35;i++){const p=document.createElement('div');p.className='particle';p.style.left=Math.random()*100+'vw';p.style.animationDuration=(5+Math.random()*10)+'s';p.style.opacity=Math.random();document.body.appendChild(p)}</script></body>
 </html>
