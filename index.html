@@ -190,7 +190,7 @@ body:before{content:'';position:fixed;inset:-30%;background:radial-gradient(circ
 <h2>Alarm Sounds</h2>
 <button class='smallbtn' onclick='closeSounds()'>Close</button>
 </div>
-<input class='search' placeholder='Search sounds...'>
+<input class='search' placeholder='Search sounds...' oninput='renderSounds(this.value)'>
 <div class='soundgrid' id='soundGrid'></div>
 </div>
 <div class='menu glass' id='menu'>
@@ -218,9 +218,80 @@ body:before{content:'';position:fixed;inset:-30%;background:radial-gradient(circ
 <script>
 let alarms=JSON.parse(localStorage.getItem('alarms')||'[]');
 let deferredPrompt,currentMission='';
-const sounds=['Classic Alarm','Loud Siren','Gentle Wake','Rain','Ocean','Forest','Birds','LoFi Chill','Meditation','Cyberpunk','Sci-Fi','Gaming','Anime','Horror','Emergency','Temple Bells','Islamic Alarm','Soft Piano','Motivation Voice'];
+const sounds=[
+{name:'Glyph Pulse',cat:'Nothing Style',freq:420,duration:'0:12'},
+{name:'Nothing Orbit',cat:'Nothing Style',freq:480,duration:'0:11'},
+{name:'Dot Matrix',cat:'Nothing Style',freq:510,duration:'0:10'},
+{name:'Neon Ping',cat:'Nothing Style',freq:560,duration:'0:08'},
+{name:'Digital Air',cat:'Nothing Style',freq:620,duration:'0:09'},
+{name:'Radar',cat:'Apple Style',freq:350,duration:'0:12'},
+{name:'Reflection',cat:'Apple Style',freq:390,duration:'0:14'},
+{name:'Night Owl',cat:'Apple Style',freq:430,duration:'0:13'},
+{name:'Silk',cat:'Apple Style',freq:450,duration:'0:09'},
+{name:'Cosmic Bell',cat:'Apple Style',freq:520,duration:'0:15'},
+{name:'Morning Flower',cat:'Samsung Style',freq:340,duration:'0:12'},
+{name:'Calm Galaxy',cat:'Samsung Style',freq:370,duration:'0:12'},
+{name:'Space Alarm',cat:'Samsung Style',freq:580,duration:'0:10'},
+{name:'Digital Rise',cat:'Samsung Style',freq:610,duration:'0:11'},
+{name:'Soft Wake',cat:'Samsung Style',freq:300,duration:'0:15'},
+{name:'Material Chime',cat:'Pixel Style',freq:470,duration:'0:08'},
+{name:'Pixel Rise',cat:'Pixel Style',freq:500,duration:'0:11'},
+{name:'Gentle Bell',cat:'Pixel Style',freq:280,duration:'0:14'},
+{name:'Android Wake',cat:'Pixel Style',freq:640,duration:'0:10'},
+{name:'Rain',cat:'Nature',freq:220,duration:'0:20'},
+{name:'Ocean',cat:'Nature',freq:180,duration:'0:22'},
+{name:'Thunder',cat:'Nature',freq:120,duration:'0:18'},
+{name:'Forest',cat:'Nature',freq:260,duration:'0:16'},
+{name:'Birds',cat:'Nature',freq:700,duration:'0:14'},
+{name:'Waterfall',cat:'Nature',freq:200,duration:'0:18'},
+{name:'Wind',cat:'Nature',freq:150,duration:'0:17'},
+{name:'Tibetan Bowl',cat:'Meditation',freq:240,duration:'0:19'},
+{name:'Zen Bell',cat:'Meditation',freq:260,duration:'0:16'},
+{name:'Soft Flute',cat:'Meditation',freq:320,duration:'0:15'},
+{name:'Healing Tone',cat:'Meditation',freq:360,duration:'0:14'},
+{name:'LoFi Beat',cat:'LoFi',freq:410,duration:'0:18'},
+{name:'Chill Piano',cat:'LoFi',freq:390,duration:'0:20'},
+{name:'Dream Synth',cat:'LoFi',freq:520,duration:'0:17'},
+{name:'Neon Pulse',cat:'Cyberpunk',freq:680,duration:'0:11'},
+{name:'Cyber Alarm',cat:'Cyberpunk',freq:720,duration:'0:10'},
+{name:'AI Wake',cat:'Cyberpunk',freq:760,duration:'0:09'},
+{name:'Hologram Tone',cat:'Cyberpunk',freq:800,duration:'0:10'},
+{name:'Emergency Siren',cat:'Loud',freq:950,duration:'0:09'},
+{name:'Super Loud Bell',cat:'Loud',freq:900,duration:'0:11'},
+{name:'Military Alarm',cat:'Loud',freq:850,duration:'0:10'},
+{name:'Heavy Wake',cat:'Loud',freq:990,duration:'0:08'},
+{name:'Temple Bell',cat:'Spiritual',freq:230,duration:'0:15'},
+{name:'Azaan Style',cat:'Spiritual',freq:260,duration:'0:18'},
+{name:'Meditation Chant',cat:'Spiritual',freq:200,duration:'0:20'},
+{name:'Morning Prayer',cat:'Spiritual',freq:290,duration:'0:16'}
+];
+let activeOsc=null,activeGain=null,currentSound='Glyph Pulse',muted=false,volumeLevel=.5,favorites=JSON.parse(localStorage.getItem('favorites')||'[]');
 const soundGrid=document.getElementById('soundGrid');
-sounds.forEach(s=>soundGrid.innerHTML+=`<div class='soundcard glass'><div><div class='soundtitle'>${s}</div><div style='opacity:.6;margin-top:6px'>Premium Alarm Sound</div></div><div class='eq'><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div></div></div>`);
+function renderSounds(filter=''){
+soundGrid.innerHTML=`<div class='card glass' style='position:sticky;top:0;z-index:2'>
+<div class='row'><button class='smallbtn' onclick='toggleMute()'>🔊 Mute</button><button class='smallbtn' onclick='stopPreview()'>⏹ Stop</button></div>
+<input type='range' min='0' max='1' step='0.01' value='0.5' onchange='setVolume(this.value)' style='width:100%;margin-top:16px'>
+</div>`;
+sounds.filter(s=>s.name.toLowerCase().includes(filter.toLowerCase())||s.cat.toLowerCase().includes(filter.toLowerCase())).forEach(s=>{
+let fav=favorites.includes(s.name);
+soundGrid.innerHTML+=`<div class='soundcard glass ${currentSound===s.name?'selected':''}' style='padding:24px;border:${currentSound===s.name?'2px solid var(--accent)':'1px solid rgba(255,255,255,.08)'}'>
+<div style='display:flex;gap:18px;align-items:center;width:100%'>
+<div style='width:74px;height:74px;border-radius:24px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;font-size:2rem'>🎵</div>
+<div style='flex:1'>
+<div class='soundtitle'>${s.name}</div>
+<div style='opacity:.6;margin-top:4px'>${s.cat} • ${s.duration}</div>
+<div class='eq' style='margin-top:10px'><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div><div class='eqbar'></div></div>
+<div class='row' style='margin-top:14px;flex-wrap:wrap'>
+<button class='smallbtn' onclick='previewSound(${s.freq},"${s.name}")'>▶ Preview</button>
+<button class='smallbtn' onclick='selectSound("${s.name}")'>✓ Select</button>
+<button class='smallbtn' onclick='toggleFavorite("${s.name}")'>${fav?'💖':'🤍'} Favorite</button>
+</div>
+</div>
+</div>
+</div>`
+})
+}
+renderSounds();
 function updateClock(){
 let d=new Date();
 let t=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
@@ -294,9 +365,42 @@ alarmMission.value=a.mission;
 document.querySelectorAll('.day').forEach(d=>d.checked=(a.customDays||'').includes(d.value));
 openCreateAlarm();
 }
-function previewSound(){
-let c=new(window.AudioContext||window.webkitAudioContext)();
-let o=c.createOscillator();let g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=600;g.gain.value=.1;o.start();o.stop(c.currentTime+1)
+function stopPreview(){
+if(activeGain){activeGain.gain.exponentialRampToValueAtTime(.0001,activeCtx.currentTime+.4)}
+if(activeOsc){try{activeOsc.stop(activeCtx.currentTime+.5)}catch(e){}}
+}
+let activeCtx=null;
+function previewSound(freq=520,name='Preview'){
+stopPreview();
+currentSound=name;
+renderSounds(document.querySelector('.search')?.value||'');
+activeCtx=new(window.AudioContext||window.webkitAudioContext)();
+activeOsc=activeCtx.createOscillator();
+activeGain=activeCtx.createGain();
+let lfo=activeCtx.createOscillator();
+let lfoGain=activeCtx.createGain();
+lfo.frequency.value=4;
+lfoGain.gain.value=20;
+lfo.connect(lfoGain);
+lfoGain.connect(activeOsc.frequency);
+activeOsc.type='sine';
+activeOsc.frequency.value=freq;
+activeOsc.connect(activeGain);
+activeGain.connect(activeCtx.destination);
+activeGain.gain.setValueAtTime(.001,activeCtx.currentTime);
+activeGain.gain.exponentialRampToValueAtTime(muted?0:volumeLevel,activeCtx.currentTime+0.4);
+activeOsc.start();
+lfo.start();
+setTimeout(()=>{if(activeGain){activeGain.gain.exponentialRampToValueAtTime(.0001,activeCtx.currentTime+.8)}},2500);
+setTimeout(()=>{stopPreview()},3200)
+}
+function setVolume(v){volumeLevel=v;if(activeGain)activeGain.gain.value=muted?0:v}
+function toggleMute(){muted=!muted;if(activeGain)activeGain.gain.value=muted?0:volumeLevel}
+function selectSound(name){currentSound=name;alarmSound.value=name;localStorage.setItem('selectedSound',name);renderSounds(document.querySelector('.search')?.value||'');navigator.vibrate?.(50)}
+function toggleFavorite(name){
+if(favorites.includes(name)){favorites=favorites.filter(f=>f!==name)}else{favorites.push(name)}
+localStorage.setItem('favorites',JSON.stringify(favorites));
+renderSounds(document.querySelector('.search')?.value||'')
 }
 function checkAlarm(){
 let n=new Date();
